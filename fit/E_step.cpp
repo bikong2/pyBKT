@@ -107,6 +107,7 @@ dict run(dict& data, dict& model, numeric::array& trans_softcounts, numeric::arr
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
 
     numeric::array alldata = extract<numeric::array>(data["data"]); //multidimensional array, so i need to keep extracting arrays.
+    //std::cout << "=================1" << std::endl;
     int bigT = len(alldata[0]); //this should be the number of columns in the alldata object. i'm assuming is 2d array.
     int num_subparts = len(alldata);
 
@@ -134,7 +135,13 @@ dict run(dict& data, dict& model, numeric::array& trans_softcounts, numeric::arr
 
     Array2d initial_distn;
     initial_distn << 1-prior, prior;
+    
+    //std::cout << "bigT=" << bigT << std::endl;
+    //std::cout << "num_subparts=" << num_subparts << std::endl;
+    //std::cout << "num_sequences=" << num_sequences << std::endl;
+    //std::cout << "num_resources=" << num_resources << std::endl;
 
+    //std::cout << "=================2" << std::endl;
     MatrixXd As(2,2*num_resources);
     for (int n=0; n<num_resources; n++) {
         double learn = extract<double>(learns[n]);
@@ -174,11 +181,16 @@ dict run(dict& data, dict& model, numeric::array& trans_softcounts, numeric::arr
     double r_trans_softcounts[2*2*num_resources];
     double r_emission_softcounts[2*2*num_subparts];
     double r_init_softcounts[2*1];
-    Map<ArrayXXd,Aligned> all_trans_softcounts(r_trans_softcounts,2,2*num_resources);
+    //std::cout << "=================3-0" << std::endl;
+    //Map<ArrayXXd,Aligned> all_trans_softcounts(r_trans_softcounts,2,2*num_resources);
+    Map<ArrayXXd> all_trans_softcounts(r_trans_softcounts,2,2*num_resources);
     all_trans_softcounts.setZero();
-    Map<Array2Xd,Aligned> all_emission_softcounts(r_emission_softcounts,2,2*num_subparts);
+    //std::cout << "=================3-1" << std::endl;
+    //Map<Array2Xd,Aligned> all_emission_softcounts(r_emission_softcounts,2,2*num_subparts);
+    Map<Array2Xd> all_emission_softcounts(r_emission_softcounts,2,2*num_subparts);
     all_emission_softcounts.setZero();
-    Map<Array2d,Aligned> all_initial_softcounts(r_init_softcounts);
+    //Map<Array2d,Aligned> all_initial_softcounts(r_init_softcounts);
+    Map<Array2d> all_initial_softcounts(r_init_softcounts);
     all_initial_softcounts.setZero();
 
     //TODO: FIX THIS!!! I'll replace all these weird arrays for zeroes ones.
@@ -188,9 +200,12 @@ dict run(dict& data, dict& model, numeric::array& trans_softcounts, numeric::arr
     //gamma_out.setZero();
     //Array2Xd alpha_out(2,bigT);
     //alpha_out.setZero();
-    Map<Array2Xd,Aligned> likelihoods_out(NULL,2,bigT);
-    Map<Array2Xd,Aligned> gamma_out(NULL,2,bigT);
-    Map<Array2Xd,Aligned> alpha_out(NULL,2,bigT);
+    //Map<Array2Xd,Aligned> likelihoods_out(NULL,2,bigT);
+    //Map<Array2Xd,Aligned> gamma_out(NULL,2,bigT);
+    //Map<Array2Xd,Aligned> alpha_out(NULL,2,bigT);
+    Map<Array2Xd> likelihoods_out(NULL,2,bigT);
+    Map<Array2Xd> gamma_out(NULL,2,bigT);
+    Map<Array2Xd> alpha_out(NULL,2,bigT);
     double s_total_loglike = 0;
     double *total_loglike = &s_total_loglike;
     //cout << "likelihoods_out" << likelihoods_out << endl;
@@ -219,21 +234,27 @@ dict run(dict& data, dict& model, numeric::array& trans_softcounts, numeric::arr
     double r_gamma_out[2*bigT];
     double r_alpha_out[2*bigT];
 
-    new (&likelihoods_out) Map<Array2Xd,Aligned>(r_likelihoods_out,2,bigT);
-    new (&gamma_out) Map<Array2Xd,Aligned>(r_gamma_out,2,bigT);
-    new (&alpha_out) Map<Array2Xd,Aligned>(r_alpha_out,2,bigT);
+    //new (&likelihoods_out) Map<Array2Xd,Aligned>(r_likelihoods_out,2,bigT);
+    //new (&gamma_out) Map<Array2Xd,Aligned>(r_gamma_out,2,bigT);
+    //new (&alpha_out) Map<Array2Xd,Aligned>(r_alpha_out,2,bigT);
+    new (&likelihoods_out) Map<Array2Xd>(r_likelihoods_out,2,bigT);
+    new (&gamma_out) Map<Array2Xd>(r_gamma_out,2,bigT);
+    new (&alpha_out) Map<Array2Xd>(r_alpha_out,2,bigT);
 
 
     /* COMPUTATION */
     Eigen::initParallel();
+    //std::cout << "=================3-2" << std::endl;
     /* omp_set_dynamic(0); */
     /* omp_set_num_threads(6); */
     #pragma omp parallel
     {
         double s_trans_softcounts[2*2*num_resources] __attribute__((aligned(16)));
         double s_emission_softcounts[2*2*num_subparts] __attribute__((aligned(16)));
-        Map<ArrayXXd,Aligned> trans_softcounts_temp(s_trans_softcounts,2,2*num_resources);
-        Map<ArrayXXd,Aligned> emission_softcounts_temp(s_emission_softcounts,2,2*num_subparts);
+        //Map<ArrayXXd,Aligned> trans_softcounts_temp(s_trans_softcounts,2,2*num_resources);
+        //Map<ArrayXXd,Aligned> emission_softcounts_temp(s_emission_softcounts,2,2*num_subparts);
+        Map<ArrayXXd> trans_softcounts_temp(s_trans_softcounts,2,2*num_resources);
+        Map<ArrayXXd> emission_softcounts_temp(s_emission_softcounts,2,2*num_subparts);
         Array2d init_softcounts_temp;
         double loglike;
 
@@ -257,7 +278,8 @@ dict run(dict& data, dict& model, numeric::array& trans_softcounts, numeric::arr
 
             //// likelihoods
             double s_likelihoods[2*T];
-            Map<Array2Xd,Aligned> likelihoods(s_likelihoods,2,T);
+            //Map<Array2Xd,Aligned> likelihoods(s_likelihoods,2,T);
+            Map<Array2Xd> likelihoods(s_likelihoods,2,T);
 
             likelihoods.setOnes();
              for (int t=0; t<T; t++) {
@@ -273,7 +295,8 @@ dict run(dict& data, dict& model, numeric::array& trans_softcounts, numeric::arr
             double norm;
             double s_alpha[2*T] __attribute__((aligned(16)));
             double contribution;
-            Map<MatrixXd,Aligned> alpha(s_alpha,2,T);
+            //Map<MatrixXd,Aligned> alpha(s_alpha,2,T);
+            Map<MatrixXd> alpha(s_alpha,2,T);
             alpha.col(0) = initial_distn * likelihoods.col(0);
             norm = alpha.col(0).sum();
             //cout << "norm: " << norm << endl;
@@ -306,7 +329,8 @@ dict run(dict& data, dict& model, numeric::array& trans_softcounts, numeric::arr
             //// backward messages and statistic counting
 
             double s_gamma[2*T] __attribute__((aligned(16)));
-            Map<Array2Xd,Aligned> gamma(s_gamma,2,T);
+            //Map<Array2Xd,Aligned> gamma(s_gamma,2,T);
+            Map<Array2Xd> gamma(s_gamma,2,T);
             gamma.col(T-1) = alpha.col(T-1);
             for (int n=0; n<num_subparts; n++) {
                 int32_t data_temp = extract<int32_t>(alldata[n][sequence_start+(T-1)]);
@@ -364,6 +388,7 @@ dict run(dict& data, dict& model, numeric::array& trans_softcounts, numeric::arr
 
     dict result;
     result["total_loglike"] = *total_loglike;
+    //std::cout << "=================4" << std::endl;
 
     //cout << "r_trans_softcounts " << r_trans_softcounts << endl;
 

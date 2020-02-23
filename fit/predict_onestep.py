@@ -26,6 +26,8 @@ def run(model, data):
 
     state_predictions = predict_onestep_states.run(data, model, result['alpha'])
 
-    correct_emission_predictions = model["guesses"]*state_predictions[0,:] + (1-model["slips"])*state_predictions[1,:]
+    correct_emission_predictions = []
+    for i in range(len(model["guesses"])):
+        correct_emission_predictions.append(model["guesses"][i]*state_predictions[0,:] + (1-model["slips"][i])*state_predictions[1,:])
 
     return (correct_emission_predictions, state_predictions)

@@ -1,12 +1,14 @@
+import sys
+sys.path.append('../')
 import numpy as np
 from pyBKT.generate import synthetic_data
 from pyBKT.fit import predict_onestep
 
 #parameters
-num_subparts = 1
+num_subparts = 2
 num_resources = 2
 num_fit_initializations = 10
-observation_sequence_lengths = np.full(500, 100, dtype=np.int)
+observation_sequence_lengths = np.full(10, 10, dtype=np.int)
 
 #generate synthetic model and data.
 #model is really easy.
@@ -29,5 +31,8 @@ print("generating data...")
 data = synthetic_data.synthetic_data(truemodel, observation_sequence_lengths)
 
 (correct_predictions, state_predictions) = predict_onestep.run(truemodel, data)
+for i in range(len(correct_predictions)):
+    print(correct_predictions[i])
+#print(state_predictions)
 
 print("finishing...")

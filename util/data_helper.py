@@ -5,7 +5,6 @@ def assistments_data(skill_name):
   import io
   import requests
   
-  print(skill_name)
   url = "https://drive.google.com/uc?export=download&id=0B3f_gAH-MpBmUmNJQ3RycGpJM0k"
   s = requests.get(url).content
   # df = pd.read_csv(io.BytesIO(s))
@@ -17,37 +16,52 @@ def assistments_data(skill_name):
   skill = df[(df["skill_name"]==skill_name) & (df["original"] == 1)]
   # sort by the order in which the problems were answered
   df["order_id"] = [int(i) for i in df["order_id"]]
-  df.sort_values("order_id", inplace=True)
+  skill.sort_values("user_id", inplace=True)
+  skill.sort_values("order_id", inplace=True)
+  print(skill)
   
   # example of how to get the unique users
-  # uilist=skill['user_id'].unique()
+  uilist = skill['user_id'].unique()
+  qelist = skill['problem_id'].unique()
+  print("unique user_id num=%d" % len(uilist))
+  print("unique problem_id num=%d" % len(qelist))
 
   # convert from 0=incorrect,1=correct to 1=incorrect,2=correct
   skill.loc[:,"correct"]+=1
   
   # filter out garbage
   df3=skill[skill["correct"]!=3]
-  data=df3["correct"].values
+  data1=df3["correct"].values
+  print("data1:", data1.shape)
+  print("num of checkpoints=%d" % data1.shape[0])
+  data = np.zeros([len(qelist), data1.shape[0]])
+  idx = 0
+  for index in skill['problem_id'].index:
+    problem_id = skill['problem_id'].get(index)
+    problem_index = qelist.tolist().index(problem_id)
+    data[problem_index, idx] = data1.tolist()[idx]
+    idx += 1
+  data2 = np.asarray(data)
+  print(data2)
+  print(data2.shape)
   
   # find out how many problems per user, form the start/length arrays
-  steps=df3.groupby("user_id")["problem_id"].count().values
-  lengths=np.copy(steps)
-  # print("steps", steps)
-  steps[0]=0
-  steps[1]=1
-  for i in range(2,steps.size):
-    steps[i]=steps[i-1]+lengths[i-2]
-  
-  starts=np.delete(steps,0)
+  steps = df3.groupby("user_id")["problem_id"].count().values
+  print("stepts.size=%d" % steps.size)
+  lengths = np.copy(steps)
+  steps[0]=1
+  for i in range(1, steps.size):
+    steps[i]=steps[i-1]+lengths[i-1]
+  starts = steps
 
-  resources=[1]*data.size
+  resources=[1]*data2.shape[1]
   resource=np.asarray(resources)
   
   stateseqs=np.copy(resource)
-  lengths=np.resize(lengths,lengths.size-1)
+  
   Data={}
   Data["stateseqs"]=np.asarray([stateseqs],dtype='int32')
-  Data["data"]=np.asarray([data],dtype='int32')
+  Data["data"]=np.asarray(data2, dtype='int32')
   Data["starts"]=np.asarray(starts)
   Data["lengths"]=np.asarray(lengths)
   Data["resources"]=resource

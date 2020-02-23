@@ -10,6 +10,8 @@ def EM_fit(model, data, tol = None, maxiter = None):
 
     check_data.check_data(data)
 
+    #print(data["data"])
+    #print(data["data"].shape)
     num_subparts = data["data"].shape[0] #mmm the first dimension of data represents each subpart?? interesting.
     num_resources = len(model["learns"])
 
@@ -22,6 +24,10 @@ def EM_fit(model, data, tol = None, maxiter = None):
     result['all_trans_softcounts'] = trans_softcounts
     result['all_emission_softcounts'] = emission_softcounts
     result['all_initial_softcounts'] = init_softcounts
+    #print(result)
+    
+    #data["data"] = np.asarray(data["data"], dtype='int32')
+    #print(data)
 
     for i in range(maxiter):
         result = E_step.run(data, model, result['all_trans_softcounts'], result['all_emission_softcounts'], result['all_initial_softcounts'], 1)

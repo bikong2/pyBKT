@@ -9,7 +9,7 @@ from copy import deepcopy
 num_gs = 1 #number of guess/slip classes
 num_learns = 1 #number of learning rates
 
-num_fit_initializations = 20
+num_fit_initializations = 5
 
 #true params used for synthetic data generation
 p_T = 0.30
@@ -25,7 +25,7 @@ truemodel["As"] =  np.zeros((num_learns,2,2), dtype=np.float_)
 for i in range(num_learns):
     truemodel["As"][i] = np.transpose([[1-p_T, p_T], [p_F, 1-p_F]])
 
-truemodel["learns"] = truemodel["As"][:,1, 0,]
+truemodel["learns"] = truemodel["As"][:,1, 0]
 truemodel["forgets"] = truemodel["As"][:,0, 1]
 
 truemodel["pi_0"] = np.array([[1-p_L0], [p_L0]])
@@ -38,7 +38,11 @@ truemodel["slips"] = np.full(num_gs, p_S, dtype=np.float_)
 
 #data!
 print("generating data...")
-observation_sequence_lengths = np.full(500, 100, dtype=np.int) #specifies 500 students with 100 observations for synthetic data
+observation_sequence_lengths = np.full(500, 100, dtype=np.int) #specifies 500 students with each 100 observations for synthetic data
+print("observation_sequence_lengths:")
+print(observation_sequence_lengths)
+print(observation_sequence_lengths.shape)
+print(sum(observation_sequence_lengths))
 data = synthetic_data.synthetic_data(truemodel, observation_sequence_lengths)
 
 #fit models, starting with random initializations

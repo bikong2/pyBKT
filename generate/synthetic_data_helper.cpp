@@ -14,6 +14,7 @@
 #include <Eigen/Core>
 #include <boost/python.hpp>
 #include <boost/python/numeric.hpp>
+//#include <boost/python/numpy.hpp>
 #include <boost/python/ptr.hpp>
 #include <Python.h>
 #include <numpy/ndarrayobject.h>

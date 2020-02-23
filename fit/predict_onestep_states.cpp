@@ -142,7 +142,8 @@ numeric::array run(dict& data, dict& model, numeric::array& forward_messages){
     //// outputs
 
     double all_predictions[2*bigT];
-    Map<Array2Xd,Aligned> predictions(all_predictions,2,bigT);
+    //Map<Array2Xd,Aligned> predictions(all_predictions,2,bigT);
+    Map<Array2Xd> predictions(all_predictions,2,bigT);
 
     /* COMPUTATION */
 
